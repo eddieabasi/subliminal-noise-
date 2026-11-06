@@ -120,13 +120,13 @@ def e2(df, out):
     for ax in axes[:, 0]:
         ax.set_ylabel("MNIST test accuracy")
     axes[0, 0].legend(loc="lower right")
-    fig.suptitle("E2: student accuracy when parts of the student are reinitialised (5 seeds, 95% CI)",
+    fig.suptitle(f"E2: student accuracy when parts of the student are reinitialised ({d.seed.nunique()} seeds, 95% CI)",
                  color=INK, fontsize=10)
     fig.tight_layout()
     fig.savefig(FIG / "e2_init_ablation.png")
     plt.close(fig)
     out["E2"] = s.to_dict("records")
-    header = "| Condition | " + " | ".join(f"m = {m}" for m in ms) + " |"
+    header = "| Condition | " + " | ".join(f"m = {int(m)}" for m in ms) + " |"
     out["md"] += ["## E2 Which shared parts matter (Fig. 2)\n", header, "| --- |" + " --- |" * len(ms)]
     for cond, title in E2_TITLES.items():
         sc = s[s["s.condition"] == cond].set_index("s.m")
@@ -175,8 +175,8 @@ def e4(df, out):
     axes[0].set_xlabel("perturbation scale δ")
     axes[0].set_ylabel("student MNIST accuracy")
     axes[0].set_title("Student accuracy", color=INK)
-    axes[0].legend(loc="lower left")
-    fig.suptitle("E4: perturbing the student's heads before distillation (5 seeds, 95% CI)", color=INK, fontsize=10)
+    axes[0].legend(loc="upper right")
+    fig.suptitle(f"E4: perturbing the student's heads before distillation ({d.seed.nunique()} seeds, 95% CI)", color=INK, fontsize=10)
     fig.tight_layout()
     fig.savefig(FIG / "e4_perturbation.png")
     plt.close(fig)
@@ -222,7 +222,7 @@ def e5(df, out):
     axes[1].set_title("Different student architectures, heads shared only", color=INK)
     axes[1].legend(loc="upper right")
     chance(axes[1])
-    fig.suptitle("E5: architecture and capacity (5 seeds, 95% CI)", color=INK, fontsize=10)
+    fig.suptitle(f"E5: architecture and capacity ({d.seed.nunique()} seeds, 95% CI)", color=INK, fontsize=10)
     fig.tight_layout()
     fig.savefig(FIG / "e5_architecture.png")
     plt.close(fig)
@@ -258,7 +258,7 @@ def e6(df, out):
     for ax in axes:
         chance(ax)
         ax.set_ylim(0, 1)
-    fig.suptitle("E6: m and N are joint bottlenecks (3 seeds, 95% CI)", color=INK, fontsize=10)
+    fig.suptitle(f"E6: m and N are joint bottlenecks ({d.seed.nunique()} seeds, 95% CI)", color=INK, fontsize=10)
     fig.tight_layout()
     fig.savefig(FIG / "e6_m_and_n.png")
     plt.close(fig)
@@ -301,7 +301,7 @@ def e7(df, out):
     axes[1].set_ylabel("relative weight change ‖Δw‖/‖w₀‖")
     axes[1].set_title("Head drift during training (both heads train)", color=INK)
     axes[1].legend(loc="upper left", fontsize=8)
-    fig.suptitle("E7: latent dimension (3 seeds, 95% CI)", color=INK, fontsize=10)
+    fig.suptitle(f"E7: latent dimension ({d.seed.nunique()} seeds, 95% CI)", color=INK, fontsize=10)
     fig.tight_layout()
     fig.savefig(FIG / "e7_latent_dim.png")
     plt.close(fig)
