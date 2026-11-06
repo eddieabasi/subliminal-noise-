@@ -69,6 +69,11 @@ def low_rank(batch: int, rank: int, gen: torch.Generator) -> torch.Tensor:
 
 
 def sample(kind: str, batch: int, gen: torch.Generator, **kw) -> torch.Tensor:
+    scale = float(kw.pop("scale", 1.0))  # optional amplitude multiplier (diagnostics only)
+    return _sample(kind, batch, gen, **kw) * scale
+
+
+def _sample(kind: str, batch: int, gen: torch.Generator, **kw) -> torch.Tensor:
     if kind == "uniform":
         x = torch.rand(batch, 1, SIDE, SIDE, generator=gen) * 2 - 1
         return x + kw.get("dc", 0.0)

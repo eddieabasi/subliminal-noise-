@@ -77,6 +77,7 @@ def fmt(s) -> str:
 def load() -> pd.DataFrame:
     rows = [json.loads(line) for line in (RES / "runs.jsonl").read_text().splitlines() if line.strip()]
     df = pd.DataFrame(rows)
+    df["student_cfg_raw"] = df["student_cfg"]
     scfg = pd.json_normalize(df["student_cfg"]).add_prefix("s.")
     tcfg = pd.json_normalize(df["teacher_cfg"]).add_prefix("t.")
     return pd.concat([df.drop(columns=["student_cfg", "teacher_cfg"]), scfg, tcfg], axis=1)
@@ -208,6 +209,7 @@ def e5(df, out):
     axes[0].set_ylim(0, 1)
     kinds = ["depth1", "depth3", "cnn_perlin8", "cnn_uniform"]
     labels = ["MLP, 1 hidden", "MLP, 3 hidden", "CNN, Perlin noise", "CNN, uniform noise"]
+    ticks = ["MLP\n1 hidden", "MLP\n3 hidden", "CNN\nPerlin noise", "CNN\nuniform noise"]
     x = np.arange(len(kinds))
     rows = []
     for i, m in enumerate((10, 50)):
@@ -216,8 +218,8 @@ def e5(df, out):
         means = np.array([si["mean"] for si in s])
         err = np.array([[si["mean"] - si["lo"] for si in s], [si["hi"] - si["mean"] for si in s]])
         axes[1].bar(x + (i - 0.5) * 0.38, means, 0.36, yerr=err, color=C[i], label=f"m = {m}", capsize=2,
-                    edgecolor="white", linewidth=1)
-    axes[1].set_xticks(x, labels)
+                    edgecolor="white", linewidth=1, error_kw={"ecolor": INK2, "elinewidth": 1})
+    axes[1].set_xticks(x, ticks)
     axes[1].set_ylim(0, 1)
     axes[1].set_title("Different student architectures, heads shared only", color=INK)
     axes[1].legend(loc="upper right")
@@ -233,6 +235,16 @@ def e5(df, out):
         out["md"].append(f"| {lab} | {fmt(r[10])} | {fmt(r[50])} |")
     out["md"] += ["", "| Student first width (m = 50) | Accuracy |", "| --- | --- |"]
     out["md"] += [f"| {int(r['s.width'])} | {fmt(r)} |" for _, r in w.iterrows()] + [""]
+    diag = df[df.exp == "E5b"]
+    if not diag.empty:
+        sd = summarise(diag, ["student"])
+        out["E5b"] = sd.to_dict("records")
+        names = {"m50_cnn_perlin8_x1.89": "CNN, m = 50, Perlin rescaled to uniform's std (x1.89)",
+                 "m250_cnn_perlin8": "CNN, m = 250, Perlin as in E5",
+                 "m250_mlp_depth3_ref": "MLP with 3 hidden layers, m = 250 (reference)"}
+        out["md"] += ["### E5b Off-paper CNN diagnostic\n", "| Student | Accuracy | Seeds |", "| --- | --- | --- |"]
+        out["md"] += [f"| {names.get(r['student'], r['student'])} | {fmt(r)} | {int(r['n'])} |" for _, r in sd.iterrows()]
+        out["md"].append("")
 
 
 def e6(df, out):
@@ -279,7 +291,7 @@ def e7(df, out):
         return
     s = summarise(d, ["s.heads", "s.d"])
     t = summarise(d[d["s.heads"] == "free"], ["s.d"], "teacher_acc").sort_values("s.d")
-    fig, axes = plt.subplots(1, 2, figsize=(10, 3.4))
+    fig, axes = plt.subplots(1, 2, figsize=(10, 4.0))
     axes[0].plot(t["s.d"], t["mean"], color=INK2, lw=1, ls="--", label="teacher")
     for i, (reg, lab) in enumerate(E7_REGIMES):
         r = s[s["s.heads"] == reg].sort_values("s.d")
@@ -289,7 +301,7 @@ def e7(df, out):
     axes[0].set_xlabel("latent width d")
     axes[0].set_ylabel("student MNIST accuracy")
     axes[0].set_title("Student accuracy", color=INK)
-    axes[0].legend(loc="lower left", fontsize=8)
+    axes[0].legend(loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=3, fontsize=8)
     chance(axes[0])
     free = d[d["s.heads"] == "free"]
     for i, (col, lab) in enumerate([("tchange_class", "teacher class head"), ("schange_aux", "student aux head")]):
@@ -315,69 +327,85 @@ def e7(df, out):
     out["md"].append("| teacher | " + " | ".join(fmt(t.set_index("s.d").loc[x]) for x in ds) + " |\n")
 
 
+def _mismatch(row) -> str:
+    """Which part of the student differs from the teacher's initialisation."""
+    cfg = row["student_cfg_raw"]
+    if row["exp"] == "E4":
+        return {"none": "nothing", "aux": "aux head", "class": "class head"}[cfg.get("head")]
+    return {"shared": "nothing", "reinit_aux": "aux head", "reinit_class": "class head"}.get(
+        cfg.get("condition"), "hidden layers")
+
+
 def x1(df, out):
     d = df[df.exp == "X1"]
-    e2d = df[(df.exp == "E2") & df["coverage_tdisp"].notna()].copy()
     if d.empty:
         return
     pooled = d.groupby("s.condition")[["coverage_tdisp", "student_acc"]].mean()
     rho_pooled = spearmanr(pooled.coverage_tdisp, pooled.student_acc).statistic
     rho_runs = spearmanr(d.coverage_tdisp, d.student_acc).statistic
     res = {"noise_sweep": {"spearman_pooled": rho_pooled, "spearman_runs": rho_runs,
-                           "n_conditions": len(pooled),
-                           "rows": pooled.reset_index().to_dict("records")}}
-    fig, axes = plt.subplots(1, 2, figsize=(10, 3.8))
+                           "n_conditions": len(pooled), "rows": pooled.reset_index().to_dict("records")}}
+
+    # E2 + E4 runs, grouped by which component is mismatched (m = 10 only, so coverage is comparable).
+    mm = df[df.exp.isin(["E2", "E4"]) & (df["s.m"].isna() | (df["s.m"] == 10))].copy()
+    mm["mismatch"] = mm.apply(_mismatch, axis=1)
+    groups = {}
+    for g, gd in mm.groupby("mismatch"):
+        groups[g] = {"n": len(gd), "coverage": float(gd.coverage_tdisp.mean()),
+                     "acc": float(gd.student_acc.mean()),
+                     "spearman": float(spearmanr(gd.coverage_tdisp, gd.student_acc).statistic)
+                     if gd.coverage_tdisp.nunique() > 1 else float("nan")}
+    res["mismatch_groups_m10"] = groups
+    no_cls = mm[mm.mismatch != "class head"]
+    res["spearman_m10_without_class_head"] = float(spearmanr(no_cls.coverage_tdisp, no_cls.student_acc).statistic)
+    res["spearman_m10_all"] = float(spearmanr(mm.coverage_tdisp, mm.student_acc).statistic)
+
+    fig, axes = plt.subplots(1, 2, figsize=(10, 3.9))
     ax = axes[0]
     ax.scatter(pooled.coverage_tdisp, pooled.student_acc, color=C[0], s=30, zorder=3)
-    for name, r in pooled.iterrows():
+    near = (pooled.coverage_tdisp - pooled.loc["uniform", "coverage_tdisp"]).abs() < 0.0015
+    near &= (pooled.student_acc - pooled.loc["uniform", "student_acc"]).abs() < 0.05
+    for name, r in pooled[~near].iterrows():
         ax.annotate(name, (r.coverage_tdisp, r.student_acc), textcoords="offset points", xytext=(4, 3),
                     fontsize=7, color=INK2)
-    ax.set_xlabel("coverage cos(d₀, û_T), before training")
-    ax.set_ylabel("student MNIST accuracy, after training")
-    ax.set_title(f"Shared init, 12 noise types: Spearman ρ = {rho_pooled:.2f}", color=INK)
+    cluster = pooled[near]
+    ax.annotate(", ".join(cluster.index), (cluster.coverage_tdisp.mean(), cluster.student_acc.max()),
+                textcoords="offset points", xytext=(-60, 8), fontsize=7, color=INK2)
+    ax.set_xlabel("coverage, computed before training")
+    ax.set_ylabel("student MNIST accuracy after training")
+    ax.set_title(f"12 noise types, shared init: Spearman ρ = {rho_pooled:.2f}", color=INK)
     chance(ax)
-    if not e2d.empty:
-        hidden_reinit = e2d["s.condition"].isin(["reinit_l1", "reinit_l2", "reinit_hidden"])
-        e2d["group"] = np.where(hidden_reinit, "hidden layers reinitialised", "hidden layers shared")
-        e2d["transfer"] = e2d.student_acc > 0.2
-        ax = axes[1]
-        groups = {}
-        for i, (g, gd) in enumerate(e2d.groupby("group")):
-            ax.scatter(gd.coverage_tdisp, gd.student_acc, color=C[i], s=14, alpha=0.8, label=g,
-                       edgecolor="white", linewidth=0.5)
-            groups[g] = {
-                "n": len(gd),
-                "spearman_tdisp": spearmanr(gd.coverage_tdisp, gd.student_acc).statistic,
-                "spearman_s2t": spearmanr(gd.coverage_s2t, gd.student_acc).statistic,
-                "auroc_tdisp": auroc(gd.coverage_tdisp, gd.transfer),
-                "auroc_s2t": auroc(gd.coverage_s2t, gd.transfer),
-                "frac_transfer": float(gd.transfer.mean()),
-                "coverage_tdisp_median": float(gd.coverage_tdisp.median()),
-            }
-        res["e2_groups"] = groups
-        ax.set_xlabel("coverage cos(d₀, û_T), before training")
-        ax.set_title("E2 runs (all m): coverage vs. transfer", color=INK)
-        ax.legend(loc="upper left", fontsize=8)
-        chance(ax)
-    fig.suptitle("X1: does Madl's coverage screen predict subliminal transfer?", color=INK, fontsize=10)
+    ax = axes[1]
+    styles = [("hidden layers", C[0]), ("aux head", C[1]), ("class head", C[2])]
+    nothing = mm[mm.mismatch == "nothing"]
+    ax.scatter(nothing.coverage_tdisp, nothing.student_acc, color=INK2, s=12, label="nothing (shared)", zorder=2,
+               edgecolor="white", linewidth=0.5)
+    for g, col in styles:
+        gd = mm[mm.mismatch == g]
+        ax.scatter(gd.coverage_tdisp, gd.student_acc, color=col, s=12, label=f"{g} differ", zorder=3,
+                   edgecolor="white", linewidth=0.5)
+    ax.set_xlabel("coverage, computed before training")
+    ax.set_title(f"E2 + E4 runs at m = 10: ρ = {res['spearman_m10_all']:.2f}, "
+                 f"{res['spearman_m10_without_class_head']:.2f} without class-head runs", color=INK)
+    ax.legend(loc="upper left", fontsize=8)
+    chance(ax)
+    fig.suptitle("X1: coverage sees the body and aux head, but is blind to the class head", color=INK, fontsize=10)
     fig.tight_layout()
     fig.savefig(FIG / "x1_coverage.png")
     plt.close(fig)
     out["X1"] = res
     out["md"] += ["## X1 Coverage screen (Madl 2026)\n",
                   f"Noise sweep, shared init, m = 10: Spearman ρ (coverage vs accuracy) = {rho_pooled:.2f} over "
-                  f"{len(pooled)} seed-pooled conditions, {rho_runs:.2f} over {len(d)} runs.\n",
+                  f"{len(pooled)} seed-pooled conditions ({rho_runs:.2f} over {len(d)} runs). Madl reports 0.95.\n",
                   "| Noise | Coverage | Student accuracy |", "| --- | --- | --- |"]
     out["md"] += [f"| {n} | {r.coverage_tdisp:.3f} | {100 * r.student_acc:.1f}% |"
                   for n, r in pooled.sort_values("coverage_tdisp").iterrows()]
-    if "e2_groups" in res:
-        out["md"] += ["", "E2 runs, transfer = accuracy above 20%:\n",
-                      "| Group | Runs | Share with transfer | Median coverage | Spearman ρ (teacher disp. / start-to-end) "
-                      "| AUROC (teacher disp. / start-to-end) |", "| --- | --- | --- | --- | --- | --- |"]
-        for g, r in res["e2_groups"].items():
-            out["md"].append(f"| {g} | {r['n']} | {100 * r['frac_transfer']:.0f}% | {r['coverage_tdisp_median']:.3f} | "
-                             f"{r['spearman_tdisp']:.2f} / {r['spearman_s2t']:.2f} | "
-                             f"{r['auroc_tdisp']:.2f} / {r['auroc_s2t']:.2f} |")
+    out["md"] += ["", f"E2 + E4 runs at m = 10 (Spearman {res['spearman_m10_all']:.2f} overall, "
+                  f"{res['spearman_m10_without_class_head']:.2f} without class-head runs):\n",
+                  "| What differs from the teacher | Runs | Mean coverage | Mean accuracy | Spearman within group |",
+                  "| --- | --- | --- | --- | --- |"]
+    for g, r in groups.items():
+        out["md"].append(f"| {g} | {r['n']} | {r['coverage']:.4f} | {100 * r['acc']:.1f}% | {r['spearman']:.2f} |")
     out["md"].append("")
 
 
