@@ -26,6 +26,12 @@ initialisation of the hidden layers, is what lets a student learn MNIST from noi
 reproduce, and found a blind spot instead. 1,065 teacher-student runs, about 2.5
 hours on 4 CPU cores.
 
+![Student accuracy vs. number of aux logits m when parts of the student are reinitialised](results/figures/e2_init_ablation.png)
+
+*Reinitialising the student's hidden layers only delays transfer: accuracy comes
+back as m grows. A reinitialised aux or class head keeps the student near chance
+at every m (claims 2-4).*
+
 | # | Claim (paper) | Our result | Verdict |
 | --- | --- | --- | --- |
 | 1 | Students trained only on noise learn MNIST (E1) | Student 87.7% [85.7, 89.7], teacher 97.1%, chance 10% | Reproduced |
@@ -40,6 +46,30 @@ hours on 4 CPU cores.
 | 10 | Extension: coverage predicts transfer, Spearman ρ ≈ 0.95 (Madl, Sec. 3) | ρ = 0.38 across 12 noise types; ρ = 0.82 across aux-head perturbations; blind to the class head | Not reproduced |
 
 Brackets are 95% bootstrap CIs over seeds. Full tables: [`results/summary.md`](results/summary.md).
+
+### Figures
+
+![Head perturbation](results/figures/e4_perturbation.png)
+
+*Noise added to either head before distillation lowers accuracy. Training pulls a
+perturbed aux head back toward the teacher's; the class head never changes
+(claim 6).*
+
+![Architecture and capacity](results/figures/e5_architecture.png)
+
+*Students with one fewer or one more hidden layer still transfer, and accuracy
+peaks near the teacher's width of 256. A CNN student barely transfers at m <= 50
+(claim 7).*
+
+![m and N bottlenecks](results/figures/e6_m_and_n.png)
+
+*With one aux logit, more noise lifts accuracy to 80%. With 1,000 noise samples
+per epoch, more aux logits help only slowly (claim 8).*
+
+![Latent dimension](results/figures/e7_latent_dim.png)
+
+*Transfer collapses at large latent width as the heads drift; freezing the aux
+head prevents most of the collapse (claim 9).*
 
 ### What the extension found
 
@@ -60,12 +90,11 @@ the latent:
 We expected the screen to go blind when the hidden layers are reinitialised.
 It did not (ρ ≈ 0.9 across conditions at m >= 50); the blind spot is the readout.
 
-![E2](results/figures/e2_init_ablation.png)
-![E4](results/figures/e4_perturbation.png)
-![E5](results/figures/e5_architecture.png)
-![E6](results/figures/e6_m_and_n.png)
-![E7](results/figures/e7_latent_dim.png)
-![X1](results/figures/x1_coverage.png)
+![Coverage vs. transfer](results/figures/x1_coverage.png)
+
+*Left: across noise types, smooth noise (Perlin, brown) has high coverage but low
+transfer. Right: runs with a mismatched class head (green) spread from chance to
+90% at the same coverage (claim 10).*
 
 ## Deviations from the paper
 
