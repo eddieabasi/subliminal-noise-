@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+from matplotlib.ticker import MaxNLocator
 import pandas as pd
 from scipy.stats import spearmanr
 
@@ -88,6 +89,7 @@ def x2(df: pd.DataFrame, out: dict) -> None:
         names = {"madl_kl": "3 aux logits, KL channel", "madl_mse": "3 aux logits, MSE", "ours": "10 aux logits, MSE"}
         ax.set_title(f"{names[setting]}: ρ = {rho5:.2f}", color=INK)
         ax.set_xlabel("coverage, before training")
+        ax.xaxis.set_major_locator(MaxNLocator(5))
         chance(ax)
     axes[0].set_ylabel("student MNIST accuracy")
     axes[0].legend(loc="upper left", fontsize=8)
