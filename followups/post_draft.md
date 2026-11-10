@@ -29,8 +29,8 @@ A split-head MLP (784-256-256) reads its latent through two linear heads: a clas
 head (10 digits) and an aux head (m extra logits). The teacher learns MNIST through
 the class head only. The student never sees a digit: it only matches the teacher's
 aux logits on uniform noise. Transfer is the student's digit accuracy through its
-untouched class head. All hyperparameters follow the paper's Appendix C; 1,065
-runs for the replication and about 700 more for the follow-ups.
+untouched class head. All hyperparameters follow the paper's Appendix C; 1,450
+trained student runs in all, on 4 CPU cores.
 
 ## What replicated
 
@@ -41,9 +41,9 @@ runs for the replication and about 700 more for the follow-ups.
 | A mismatched head blocks transfer | Class head reinitialised: 10-11% at every m; aux head: below 25% | Reproduced |
 | Best case matches the teacher | 96.7% vs 96.8% | Reproduced |
 | Large latent width breaks it via aux-head drift | 14.9% at d = 16,384; 71.9% with the aux head frozen | Reproduced |
-| Other architectures transfer | MLPs with one more or one fewer layer: yes. CNN: CNN_RESULT | CNN_VERDICT |
-| m and N are joint bottlenecks | M1_RESULT | M1_VERDICT |
-| EMNIST: more classes, weaker transfer | EMNIST_RESULT | EMNIST_VERDICT |
+| Other architectures transfer | MLPs with one more or one fewer layer: yes. CNN: 20.8% at m = 50 with the authors' noise; 46% at m = 250 with ours | Partly |
+| m and N are joint bottlenecks | m = 1 peaks at 80% then declines; N = 1,000 levels off near 28% | Reproduced |
+| EMNIST: more classes, weaker transfer | 2 to 47 classes: teacher 99.7% to 82.3%, student 98.3% to 7.3% | Reproduced |
 
 ## The screen and its blind spot
 
@@ -93,4 +93,4 @@ where his token-trait results already point.
   `d_sweep_fixed_class_head.sh` freezes the aux head. Our runs freeze heads by name
   and agree with the paper's text (aux-head drift dominates), so this looks like a
   file-naming slip rather than a wrong result.
-* PERLIN_NOTE
+* The paper does not state the Perlin noise amplitude; the code scales each image to a peak of 1. Saying so in the paper would help: with half that amplitude our CNN student transferred at 14% instead of 21%.

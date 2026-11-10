@@ -235,6 +235,14 @@ def e5(df, out):
         out["md"].append(f"| {lab} | {fmt(r[10])} | {fmt(r[50])} |")
     out["md"] += ["", "| Student first width (m = 50) | Accuracy |", "| --- | --- |"]
     out["md"] += [f"| {int(r['s.width'])} | {fmt(r)} |" for _, r in w.iterrows()] + [""]
+    peak = df[df.exp == "E8"][df[df.exp == "E8"].student.str.contains("cnn_perlin8_peak")]
+    if not peak.empty:
+        sp = summarise(peak, ["student"])
+        out["E8_cnn"] = sp.to_dict("records")
+        out["md"] += ["### E8 CNN student with the authors' Perlin noise (peak-normalised per image)\n",
+                      "| Student | Accuracy | Seeds |", "| --- | --- | --- |"]
+        out["md"] += [f"| CNN, m = {r['student'].split('_')[0][1:]} | {fmt(r)} | {int(r['n'])} |" for _, r in sp.iterrows()]
+        out["md"].append("")
     diag = df[df.exp == "E5b"]
     if not diag.empty:
         sd = summarise(diag, ["student"])
@@ -248,7 +256,7 @@ def e5(df, out):
 
 
 def e6(df, out):
-    d = df[df.exp == "E6"]
+    d = df[df.exp.isin(["E6", "E8"]) & (df.student.str.startswith("m1_N") | df.student.str.startswith("N1000_m"))]
     if d.empty:
         return
     a = summarise(d[d.student.str.startswith("m1_")], ["s.N"]).sort_values("s.N")
@@ -270,7 +278,7 @@ def e6(df, out):
     for ax in axes:
         chance(ax)
         ax.set_ylim(0, 1)
-    fig.suptitle(f"E6: m and N are joint bottlenecks ({d.seed.nunique()} seeds, 95% CI)", color=INK, fontsize=10)
+    fig.suptitle("E6 + E8: m and N are joint bottlenecks (5 seeds; 3 for N > 3 million; 95% CI)", color=INK, fontsize=10)
     fig.tight_layout()
     fig.savefig(FIG / "e6_m_and_n.png")
     plt.close(fig)
@@ -279,6 +287,15 @@ def e6(df, out):
     out["md"] += [f"| {int(r['s.N']):,} | {fmt(r)} |" for _, r in a.iterrows()]
     out["md"] += ["", "| N = 1,000, m | Accuracy |", "| --- | --- |"]
     out["md"] += [f"| {int(r['s.m'])} | {fmt(r)} |" for _, r in b.iterrows()] + [""]
+    # paired decline after the peak: same seeds at N = 10^6 and N = 8.2 x 10^6
+    a1 = d[d.student == "m1_N1000000"].set_index("seed").student_acc
+    a8 = d[d.student == "m1_N8192000"].set_index("seed").student_acc
+    both = a1.index.intersection(a8.index)
+    if len(both):
+        diff = (a8.loc[both] - a1.loc[both]) * 100
+        out["E6_decline"] = {"seeds": list(map(int, both)), "diff_points": diff.round(1).tolist()}
+        out["md"] += [f"Paired change from N = 1,000,000 to N = 8,192,000 (seeds {', '.join(map(str, both))}): "
+                      + ", ".join(f"{x:+.1f}" for x in diff) + f" points (mean {diff.mean():+.1f}).\n"]
 
 
 E7_REGIMES = [("free", "both heads train"), ("aux_fixed", "aux head fixed"),
@@ -334,6 +351,34 @@ def _mismatch(row) -> str:
         return {"none": "nothing", "aux": "aux head", "class": "class head"}[cfg.get("head")]
     return {"shared": "nothing", "reinit_aux": "aux head", "reinit_class": "class head"}.get(
         cfg.get("condition"), "hidden layers")
+
+
+def e9(df, out):
+    d = df[df.exp == "E9"]
+    if d.empty:
+        return
+    st = summarise(d, ["s.classes"]).sort_values("s.classes")
+    te = summarise(d, ["s.classes"], "teacher_acc").sort_values("s.classes")
+    fig, ax = plt.subplots(figsize=(5.5, 3.4))
+    ax.plot(te["s.classes"], te["mean"], color=INK2, lw=1, ls="--", label="teacher")
+    errplot(ax, st["s.classes"], st, C[0], "student (heads shared only, m = 50)")
+    ks = np.arange(2, 48)
+    ax.plot(ks, 1 / ks, color=INK2, lw=1, ls=":", label="chance (1/K)")
+    ax.set_xlabel("number of EMNIST classes K")
+    ax.set_ylabel("test accuracy")
+    ax.set_ylim(0, 1.02)
+    ax.legend(loc="center right", fontsize=8)
+    ax.set_title(f"E9: EMNIST class-count sweep ({d.seed.nunique()} seeds, 95% CI)", color=INK)
+    fig.tight_layout()
+    fig.savefig(FIG / "e9_emnist.png")
+    plt.close(fig)
+    out["E9"] = {"student": st.to_dict("records"), "teacher": te.to_dict("records")}
+    out["md"] += ["## E9 EMNIST class-count sweep (Fig. 3c)\n", "| Classes K | Teacher | Student | Chance |",
+                  "| --- | --- | --- | --- |"]
+    for (_, s_), (_, t_) in zip(st.iterrows(), te.iterrows()):
+        k = int(s_["s.classes"])
+        out["md"].append(f"| {k} | {fmt(t_)} | {fmt(s_)} | {100 / k:.1f}% |")
+    out["md"].append("")
 
 
 def x1(df, out):
@@ -413,7 +458,7 @@ def main() -> None:
     FIG.mkdir(parents=True, exist_ok=True)
     df = load()
     out: dict = {"md": ["# Results\n", "Mean over seeds with a 95% bootstrap CI over seeds. Chance = 10%.\n"]}
-    for fn in (e1, e2, e3, e4, e5, e6, e7, x1):
+    for fn in (e1, e2, e3, e4, e5, e6, e7, e9, x1):
         fn(df, out)
     timing = df.groupby("exp")["seconds_student"].mean()
     out["md"] += ["## Run time\n", "| Experiment | Mean seconds per student run (1 core) |", "| --- | --- |"]
