@@ -112,3 +112,33 @@ def test_coverage_positive_under_shared_init():
     cov = coverage(s, t0, t, nfn, seed=0)
     assert cov["coverage_tdisp"] > 0
     assert cov["coverage_tdisp"] == pytest.approx(cov["coverage_s2t"])
+
+
+@pytest.mark.parametrize("kind,kw", [("dcfrac", {"beta": 0.0}), ("dcfrac", {"beta": 0.9}),
+                                     ("shape", {"dist": "laplace"}), ("shape", {"dist": "sparse"}),
+                                     ("shape", {"dist": "student_t3"}), ("perlin", {"res": 4, "standardise": True}),
+                                     ("mixture", {"p": 0.5, "a": {"kind": "dcfrac", "beta": 0.9},
+                                                  "b": {"kind": "shape", "dist": "uniform"}})])
+def test_fixed_rms_families(kind, kw):
+    x = noise.sample(kind, 512, torch.Generator().manual_seed(0), **kw)
+    rms = float(x.pow(2).mean().sqrt())
+    assert x.shape == (512, 1, 28, 28) and abs(rms - noise.UNIFORM_STD) < 0.03, rms
+
+
+def test_kl_channel_and_readout_coverage():
+    from sublim.coverage import initial_update, readout_coverage
+    from sublim.train import channel_loss
+    a, b = torch.randn(16, 3), torch.randn(16, 3)
+    assert float(channel_loss(a, a, "kl")) == pytest.approx(0.0, abs=1e-6)
+    assert float(channel_loss(a, b, "kl")) > 0
+    t = make_teacher("mlp", (64, 64), 8, seed=0)
+    t0 = copy.deepcopy(t)
+    x, y = torch.randn(512, 1, 28, 28), torch.randint(0, 10, (512,))
+    train_teacher(t, x, y, seed=0, epochs=2, batch=64)
+    nfn = lambda b, g: noise.sample("uniform", b, g)  # noqa: E731
+    shared = make_student(t0, seed=0)
+    d0 = initial_update(shared, t, nfn, seed=0)
+    rc_shared = readout_coverage(shared, t, d0, x[:256])
+    bad = make_student(t0, seed=0, reinit=("class",))
+    rc_bad = readout_coverage(bad, t, initial_update(bad, t, nfn, seed=0), x[:256])
+    assert rc_shared > rc_bad

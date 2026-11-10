@@ -28,3 +28,25 @@ def load_mnist(root: Path = ROOT) -> dict[str, torch.Tensor]:
     root.mkdir(parents=True, exist_ok=True)
     torch.save(out, cache)
     return out
+
+
+def load_emnist(classes: int, root: Path = ROOT) -> dict[str, torch.Tensor]:
+    """EMNIST "balanced" (47 classes), keeping the first ``classes`` labels, with the
+    same preprocessing as MNIST, as in the authors' code (no transpose)."""
+    cache = root / "emnist_balanced_tensors.pt"
+    if cache.exists():
+        full = torch.load(cache)
+    else:
+        from torchvision.datasets import EMNIST
+
+        full = {}
+        for split, train in (("train", True), ("test", False)):
+            ds = EMNIST(root, split="balanced", train=train, download=True)
+            full[f"x_{split}"] = ds.data.float().div(255).sub(MEAN).div(STD).unsqueeze(1).contiguous()
+            full[f"y_{split}"] = ds.targets.clone()
+        torch.save(full, cache)
+    out = {}
+    for split in ("train", "test"):
+        keep = full[f"y_{split}"] < classes
+        out[f"x_{split}"], out[f"y_{split}"] = full[f"x_{split}"][keep], full[f"y_{split}"][keep]
+    return out

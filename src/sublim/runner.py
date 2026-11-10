@@ -14,18 +14,21 @@ from typing import Any
 import torch
 
 from . import noise as noise_mod
-from .coverage import body_vector, coverage
-from .data import load_mnist
+from .coverage import body_vector, coverage, early_agreement
+from .data import load_emnist, load_mnist
 from .init import components, cosine, flat, freeze_, make_student, make_teacher, perturb_
 from .models import n_params
 from .train import accuracy, aux_loss, distill_student, train_teacher
 
 _DATA: dict[str, torch.Tensor] | None = None
+PROBES = 2000  # unlabeled MNIST training images used by the readout-coverage screen
 
-TEACHER_DEFAULTS = {"arch": "mlp", "widths": [256, 256], "m": 10, "freeze_class": False, "epochs": 5}
+TEACHER_DEFAULTS = {"arch": "mlp", "widths": [256, 256], "m": 10, "freeze_class": False, "epochs": 5,
+                    "dataset": "mnist", "classes": 10}
 STUDENT_DEFAULTS = {
     "arch": None, "widths": None, "reinit": [], "perturb": None, "freeze_aux": False,
     "noise": {"kind": "uniform"}, "steps": 60, "batch": 1000, "epochs": 5, "coverage": True,
+    "loss": "mse",
 }
 
 
@@ -45,14 +48,23 @@ def _rel_change(before: torch.Tensor, after: torch.Tensor) -> float:
     return float((after - before).norm() / (before.norm() + 1e-12))
 
 
+def screens(student_init, teacher_init, teacher, nfn, seed: int, scfg: dict, probe_x: torch.Tensor) -> dict:
+    """Everything an auditor could compute before (or in the first 5% of) distillation."""
+    out = coverage(student_init, teacher_init, teacher, nfn, seed=20_000 + seed, loss=scfg["loss"], probe_x=probe_x)
+    out["early_agreement"] = early_agreement(student_init, teacher, nfn, probe_x, seed=seed + 2,
+                                             batch=scfg["batch"], loss=scfg["loss"])
+    out["class_head_cos"] = cosine(flat(student_init.class_head), flat(teacher.class_head))
+    return out
+
+
 def run_job(job: dict[str, Any]) -> list[dict[str, Any]]:
     torch.set_num_threads(int(job.get("threads", 1)))
-    d = data()
     seed = int(job["seed"])
     tcfg = {**TEACHER_DEFAULTS, **job.get("teacher", {})}
+    d = data() if tcfg["dataset"] == "mnist" else load_emnist(int(tcfg["classes"]))
 
     t0 = time.time()
-    teacher = make_teacher(tcfg["arch"], tuple(tcfg["widths"]), tcfg["m"], seed)
+    teacher = make_teacher(tcfg["arch"], tuple(tcfg["widths"]), tcfg["m"], seed, int(tcfg["classes"]))
     if tcfg["freeze_class"]:
         freeze_(teacher.class_head)
     teacher_init = copy.deepcopy(teacher)
@@ -80,16 +92,16 @@ def run_job(job: dict[str, Any]) -> list[dict[str, Any]]:
             "n_params_teacher": n_params(teacher), "n_params_student": n_params(student),
             "teacher_acc": teacher_acc,
             "student_init_acc": accuracy(student, d["x_test"], d["y_test"]),
-            "aux_loss_init": aux_loss(student, teacher, nfn, seed=10_000 + seed),
+            "aux_loss_init": aux_loss(student, teacher, nfn, seed=10_000 + seed, loss=scfg["loss"]),
         }
         if scfg["coverage"]:
-            row.update(coverage(student_init, teacher_init, teacher, nfn, seed=20_000 + seed))
+            row.update(screens(student_init, teacher_init, teacher, nfn, seed, scfg, d["x_train"][:PROBES]))
 
         distill_student(student, teacher, nfn, seed=seed + 2, epochs=scfg["epochs"],
-                        steps=scfg["steps"], batch=scfg["batch"])
+                        steps=scfg["steps"], batch=scfg["batch"], loss=scfg["loss"])
 
         row["student_acc"] = accuracy(student, d["x_test"], d["y_test"])
-        row["aux_loss_final"] = aux_loss(student, teacher, nfn, seed=10_000 + seed)
+        row["aux_loss_final"] = aux_loss(student, teacher, nfn, seed=10_000 + seed, loss=scfg["loss"])
         s_comps_i, s_comps_f = components(student_init), components(student)
         # Head compatibility (Fig. 5b,d): student heads vs the teacher's final heads.
         for h in ("class", "aux"):

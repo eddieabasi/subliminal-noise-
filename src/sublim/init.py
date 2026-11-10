@@ -27,10 +27,10 @@ def reinit_(module: nn.Module, seed: int) -> None:
         module.reset_parameters()
 
 
-def make_teacher(arch: str, widths: tuple[int, ...], m_aux: int, seed: int) -> SplitHeadNet:
+def make_teacher(arch: str, widths: tuple[int, ...], m_aux: int, seed: int, n_classes: int = 10) -> SplitHeadNet:
     with torch.random.fork_rng(devices=[]):
         torch.manual_seed(seed)
-        return build(arch, widths, m_aux)
+        return build(arch, widths, m_aux, n_classes)
 
 
 def make_student(
@@ -52,7 +52,7 @@ def make_student(
     else:
         with torch.random.fork_rng(devices=[]):
             torch.manual_seed(seed + 7919)
-            student = build(arch, widths, teacher_init.aux_head.out_features)
+            student = build(arch, widths, teacher_init.aux_head.out_features, teacher_init.class_head.out_features)
         assert student.latent_dim == teacher_init.latent_dim, "heads need a shared latent width"
         student.class_head.load_state_dict(teacher_init.class_head.state_dict())
         student.aux_head.load_state_dict(teacher_init.aux_head.state_dict())

@@ -78,7 +78,43 @@ def _sample(kind: str, batch: int, gen: torch.Generator, **kw) -> torch.Tensor:
         x = torch.rand(batch, 1, SIDE, SIDE, generator=gen) * 2 - 1
         return x + kw.get("dc", 0.0)
     if kind == "perlin":
-        return perlin(batch, int(kw.get("res", 8)), gen)
+        x = perlin(batch, int(kw.get("res", 8)), gen)
+        if kw.get("peak_normalise"):  # as in the authors' code: each image scaled to max |x| = 1
+            return x / (x.abs().amax(dim=(1, 2, 3), keepdim=True) + 1e-8)
+        return _standardise(x) if kw.get("standardise") else x
+    # ---- fixed-RMS families for the step-1 sweep (after Madl 2026), RMS = std of U(-1, 1)
+    if kind == "dcfrac":
+        # a fraction beta of the RMS is a constant (DC) offset, the rest white noise
+        beta = float(kw["beta"])
+        z = (torch.rand(batch, 1, SIDE, SIDE, generator=gen) * 2 - 1) * math.sqrt(3)
+        return UNIFORM_STD * (beta + math.sqrt(1 - beta**2) * z)
+    if kind == "shape":
+        dist = kw["dist"]
+        shape = (batch, 1, SIDE, SIDE)
+        if dist == "uniform":
+            x = torch.rand(shape, generator=gen) * 2 - 1
+        elif dist == "gaussian":
+            x = torch.randn(shape, generator=gen)
+        elif dist == "rademacher":
+            x = torch.randint(0, 2, shape, generator=gen).float() * 2 - 1
+        elif dist == "laplace":
+            u = torch.rand(shape, generator=gen) - 0.5
+            x = -torch.sign(u) * torch.log1p(-2 * u.abs())
+        elif dist == "sparse":
+            x = torch.randn(shape, generator=gen) * (torch.rand(shape, generator=gen) < 0.1)
+        elif dist == "student_t3":
+            z = torch.randn(shape, generator=gen)
+            chi2 = torch.randn((3, *shape), generator=gen).pow(2).sum(0)
+            x = z / torch.sqrt(chi2 / 3)
+        else:
+            raise ValueError(f"unknown shape {dist!r}")
+        return _standardise(x)
+    if kind == "mixture":
+        # each image comes from spec "a" with probability p, else from spec "b"
+        a, b = dict(kw["a"]), dict(kw["b"])
+        xa, xb = _sample(a.pop("kind"), batch, gen, **a), _sample(b.pop("kind"), batch, gen, **b)
+        pick = (torch.rand(batch, generator=gen) < float(kw["p"])).float().reshape(-1, 1, 1, 1)
+        return pick * xa + (1 - pick) * xb
     if kind == "gaussian":
         return torch.randn(batch, 1, SIDE, SIDE, generator=gen) * UNIFORM_STD
     if kind == "rademacher":
