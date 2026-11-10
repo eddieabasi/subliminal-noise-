@@ -121,9 +121,10 @@ def _agreement(student: SplitHeadNet, teacher: SplitHeadNet, probe_x: torch.Tens
 
 
 def early_agreement(student_init: SplitHeadNet, teacher: SplitHeadNet, noise_fn: NoiseFn, probe_x: torch.Tensor,
-                    *, seed: int, steps: int = 15, batch: int = 1000, loss: str = "mse") -> float:
+                    *, seed: int, steps: int = 15, batch: int = 1000, loss: str = "mse",
+                    opt: str = "adam", lr: float = 1e-3) -> float:
     """Agreement with the teacher's labels on probes after the first ``steps`` distillation steps.
     ``seed`` must be the full run's distillation seed so these are literally its first steps."""
     s = copy.deepcopy(student_init)
-    distill_student(s, teacher, noise_fn, seed=seed, epochs=1, steps=steps, batch=batch, loss=loss)
+    distill_student(s, teacher, noise_fn, seed=seed, epochs=1, steps=steps, batch=batch, loss=loss, opt=opt, lr=lr)
     return _agreement(s, teacher, probe_x)

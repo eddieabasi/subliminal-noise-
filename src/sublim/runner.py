@@ -28,7 +28,7 @@ TEACHER_DEFAULTS = {"arch": "mlp", "widths": [256, 256], "m": 10, "freeze_class"
 STUDENT_DEFAULTS = {
     "arch": None, "widths": None, "reinit": [], "perturb": None, "freeze_aux": False,
     "noise": {"kind": "uniform"}, "steps": 60, "batch": 1000, "epochs": 5, "coverage": True,
-    "loss": "mse",
+    "loss": "mse", "opt": "adam", "lr": 1e-3,
 }
 
 
@@ -52,7 +52,8 @@ def screens(student_init, teacher_init, teacher, nfn, seed: int, scfg: dict, pro
     """Everything an auditor could compute before (or in the first 5% of) distillation."""
     out = coverage(student_init, teacher_init, teacher, nfn, seed=20_000 + seed, loss=scfg["loss"], probe_x=probe_x)
     out["early_agreement"] = early_agreement(student_init, teacher, nfn, probe_x, seed=seed + 2,
-                                             batch=scfg["batch"], loss=scfg["loss"])
+                                             batch=scfg["batch"], loss=scfg["loss"],
+                                             opt=scfg["opt"], lr=scfg["lr"])
     out["class_head_cos"] = cosine(flat(student_init.class_head), flat(teacher.class_head))
     return out
 
@@ -98,7 +99,8 @@ def run_job(job: dict[str, Any]) -> list[dict[str, Any]]:
             row.update(screens(student_init, teacher_init, teacher, nfn, seed, scfg, d["x_train"][:PROBES]))
 
         distill_student(student, teacher, nfn, seed=seed + 2, epochs=scfg["epochs"],
-                        steps=scfg["steps"], batch=scfg["batch"], loss=scfg["loss"])
+                        steps=scfg["steps"], batch=scfg["batch"], loss=scfg["loss"],
+                        opt=scfg["opt"], lr=scfg["lr"])
 
         row["student_acc"] = accuracy(student, d["x_test"], d["y_test"])
         row["aux_loss_final"] = aux_loss(student, teacher, nfn, seed=10_000 + seed, loss=scfg["loss"])

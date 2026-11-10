@@ -56,11 +56,11 @@ def score(d: pd.DataFrame, col: str) -> tuple[float, float]:
     return float(spearmanr(d[col], d.student_acc).statistic), auroc(d[col], d.student_acc > TRANSFER)
 
 
-def x2(df: pd.DataFrame, out: dict) -> None:
-    d = df[df.exp == "X2"]
+def x2(df: pd.DataFrame, out: dict, exp: str = "X2", label: str = "Adam students", fig_name: str = "x2_madl_sweep.png") -> None:
+    d = df[df.exp == exp]
     if d.empty:
         return
-    res, md = {}, ["## Step 1 - X2: coverage law in a Madl-like setup\n",
+    res, md = {}, [f"## Step 1 - {exp} ({label}): coverage law in a Madl-like setup\n",
                    "Seed-pooled Spearman ρ between coverage and student accuracy over noise conditions "
                    "(Madl reports 0.95 over his 54).\n",
                    "| Setting | Madl's 5 families (33 conditions) | + Perlin (36) | Leave-one-family-out, min | "
@@ -93,16 +93,17 @@ def x2(df: pd.DataFrame, out: dict) -> None:
         chance(ax)
     axes[0].set_ylabel("student MNIST accuracy")
     axes[0].legend(loc="upper left", fontsize=8)
-    fig.suptitle("Step 1: coverage vs transfer over 36 fixed-RMS noise conditions (3 seeds pooled)", color=INK, fontsize=10)
+    fig.suptitle(f"Step 1 ({label}): coverage vs transfer over 36 fixed-RMS noise conditions (3 seeds pooled)",
+                 color=INK, fontsize=10)
     fig.tight_layout()
-    fig.savefig(FIG / "x2_madl_sweep.png")
+    fig.savefig(FIG / fig_name)
     plt.close(fig)
     md += ["", "Per-family Spearman ρ (seed-pooled):\n",
            "| Setting | " + " | ".join(sorted(res["ours"]["per_family"])) + " |",
            "| --- |" + " --- |" * len(res["ours"]["per_family"])]
     for setting, r in res.items():
         md.append(f"| {setting} | " + " | ".join(f"{r['per_family'][f]:.2f}" for f in sorted(r["per_family"])) + " |")
-    out["X2"] = res
+    out[exp] = res
     out["md"] += md + [""]
 
 
@@ -162,6 +163,19 @@ def main() -> None:
         out["md"].append(f"Teachers rebuilt for after-the-fact screening: {df.attrs['rebuilt']} runs, "
                          f"{df.attrs['rebuild_mismatches']} with a teacher accuracy different from the original run.\n")
     x2(df, out)
+    x2(df, out, "X3", "plain SGD students, lr 3", "x3_sgd_sweep.png")
+    if "X2" in out and "X3" in out:
+        out["md"] += ["## Adam vs plain SGD (Spearman ρ, seed-pooled)\n",
+                      "| Setting | Adam: 5 families | SGD: 5 families | Adam: + Perlin | SGD: + Perlin | "
+                      "Adam: accuracy range | SGD: accuracy range |", "| --- | --- | --- | --- | --- | --- | --- |"]
+        for setting in out["X2"]:
+            a, g = out["X2"][setting], out["X3"].get(setting)
+            if g is None:
+                continue
+            rng = lambda r: f"{100 * min(x['student_acc'] for x in r['rows']):.0f}-{100 * max(x['student_acc'] for x in r['rows']):.0f}%"
+            out["md"].append(f"| {setting} | {a['rho_madl_families']:.2f} | {g['rho_madl_families']:.2f} | "
+                             f"{a['rho_with_perlin']:.2f} | {g['rho_with_perlin']:.2f} | {rng(a)} | {rng(g)} |")
+        out["md"].append("")
     step2(df, out)
     (RES / "screens_summary.md").write_text("\n".join(out.pop("md")))
     (RES / "screens_summary.json").write_text(json.dumps(out, indent=1, default=float))

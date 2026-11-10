@@ -128,6 +128,23 @@ is an inverted U.
 
 ![Coverage in a Madl-like sweep](results/figures/x2_madl_sweep.png)
 
+**Rerun with plain SGD students (X3, 324 runs).** The optimizer explains part of the
+gap. Coverage measures the raw gradient direction; plain SGD follows it, Adam (the
+replicated paper's optimizer, used above) rescales each weight's step.
+
+| Setting | ρ with Adam | ρ with plain SGD (lr 3) | SGD accuracy range |
+| --- | --- | --- | --- |
+| 10 aux logits, MSE | 0.47 | 0.78 | 9-42% |
+| 3 aux logits, KL | 0.40 | 0.50 | 9-21% |
+| 3 aux logits, MSE | 0.49 | -0.24 | 8-10% (no transfer, nothing to rank) |
+
+In the 10-logit setting the smooth-noise inversion disappears (spectral family -0.43
+to +0.48). It still stops short of 0.95, and SGD students inherit far less (at most
+42%, against 85% with Adam). One learning rate (3, the largest stable one in a
+calibration on uniform noise) was used for every condition.
+
+![Coverage with plain SGD students](results/figures/x3_sgd_sweep.png)
+
 ### 2. A screen that can see the readout
 
 We compared candidate screens over existing runs (scored after the fact with
@@ -213,11 +230,11 @@ src/sublim/
   models.py     split-head MLP and CNN (Tables 1-2)
   init.py       layerwise shared / independent init, head perturbation, freezing
   noise.py      uniform, Perlin, X1 and fixed-RMS X2 noise families
-  train.py      teacher training, student aux distillation (MSE or KL), evaluation
+  train.py      teacher training, student aux distillation (MSE or KL; Adam or SGD), evaluation
   coverage.py   screens: Madl's coverage, readout coverage, early-agreement canary
   data.py       MNIST and EMNIST (balanced, first K classes) as in-memory tensors
   runner.py     one job = one teacher + all student conditions distilled from it
-experiments/    one config per experiment (E1-E9, X1, X2)
+experiments/    one config per experiment (E1-E9, X1-X3)
 scripts/run.py              parallel, resumable sweep launcher -> results/runs.jsonl
 scripts/screen.py           screens for existing runs, no retraining -> results/screens.jsonl
 scripts/analyze.py          tables (results/summary.md) and figures (results/figures/)
@@ -233,7 +250,7 @@ pip install torch torchvision scipy pandas matplotlib pytest
 python -m pytest -q tests
 python scripts/run.py e1_baseline e2_init_ablation e3_best_case e4_perturbation --workers 4
 python scripts/run.py e5_architecture e6_m_and_n e7_latent_dim x1_noise_sweep --workers 4
-python scripts/run.py e5b_cnn_diagnostic x2_madl_sweep e8_gaps e9_emnist --workers 4
+python scripts/run.py e5b_cnn_diagnostic x2_madl_sweep x3_sgd_sweep e8_gaps e9_emnist --workers 4
 python scripts/screen.py e2_init_ablation e4_perturbation x1_noise_sweep --workers 4
 python scripts/analyze.py
 python scripts/analyze_screens.py

@@ -694,6 +694,701 @@
    ]
   }
  },
+ "X3": {
+  "madl_kl": {
+   "rho_madl_families": 0.5040106951871658,
+   "rho_with_perlin": 0.355984555984556,
+   "lofo_min": 0.21162393162393162,
+   "per_family": {
+    "dc": 0.6785714285714287,
+    "mixture": 0.8999999999999998,
+    "perlin": -0.5,
+    "rank": 0.6,
+    "shape": 0.2571428571428572,
+    "spectral": -0.5333333333333333
+   },
+   "rows": [
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.0",
+     "coverage_tdisp": 0.01774145724872748,
+     "student_acc": 0.17889999999999998
+    },
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.3",
+     "coverage_tdisp": 0.012608291891713938,
+     "student_acc": 0.13943333333333333
+    },
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.5",
+     "coverage_tdisp": 0.011641084216535091,
+     "student_acc": 0.11406666666666666
+    },
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.7",
+     "coverage_tdisp": 0.009804364759474993,
+     "student_acc": 0.1178
+    },
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.8",
+     "coverage_tdisp": 0.00864653056487441,
+     "student_acc": 0.0899
+    },
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.9",
+     "coverage_tdisp": 0.007434722395070518,
+     "student_acc": 0.12353333333333333
+    },
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.95",
+     "coverage_tdisp": 0.0068988612038083375,
+     "student_acc": 0.09996666666666666
+    },
+    {
+     "s.family": "mixture",
+     "s.condition": "p0.1",
+     "coverage_tdisp": 0.016263126706083614,
+     "student_acc": 0.1737
+    },
+    {
+     "s.family": "mixture",
+     "s.condition": "p0.3",
+     "coverage_tdisp": 0.012090148869901896,
+     "student_acc": 0.16820000000000002
+    },
+    {
+     "s.family": "mixture",
+     "s.condition": "p0.5",
+     "coverage_tdisp": 0.01088253043902417,
+     "student_acc": 0.11793333333333333
+    },
+    {
+     "s.family": "mixture",
+     "s.condition": "p0.7",
+     "coverage_tdisp": 0.009713536400037507,
+     "student_acc": 0.12773333333333334
+    },
+    {
+     "s.family": "mixture",
+     "s.condition": "p0.9",
+     "coverage_tdisp": 0.008189987624064088,
+     "student_acc": 0.09900000000000002
+    },
+    {
+     "s.family": "perlin",
+     "s.condition": "res2",
+     "coverage_tdisp": 0.02054155431687832,
+     "student_acc": 0.12286666666666667
+    },
+    {
+     "s.family": "perlin",
+     "s.condition": "res4",
+     "coverage_tdisp": 0.024291682988405228,
+     "student_acc": 0.12426666666666668
+    },
+    {
+     "s.family": "perlin",
+     "s.condition": "res8",
+     "coverage_tdisp": 0.02014120512952407,
+     "student_acc": 0.15156666666666666
+    },
+    {
+     "s.family": "rank",
+     "s.condition": "rank1",
+     "coverage_tdisp": 0.018045780559380848,
+     "student_acc": 0.1764
+    },
+    {
+     "s.family": "rank",
+     "s.condition": "rank16",
+     "coverage_tdisp": 0.018278443564971287,
+     "student_acc": 0.17463333333333333
+    },
+    {
+     "s.family": "rank",
+     "s.condition": "rank2",
+     "coverage_tdisp": 0.018493644272287686,
+     "student_acc": 0.1761
+    },
+    {
+     "s.family": "rank",
+     "s.condition": "rank28",
+     "coverage_tdisp": 0.017357170581817627,
+     "student_acc": 0.17336666666666667
+    },
+    {
+     "s.family": "rank",
+     "s.condition": "rank4",
+     "coverage_tdisp": 0.017896607518196106,
+     "student_acc": 0.1746
+    },
+    {
+     "s.family": "rank",
+     "s.condition": "rank8",
+     "coverage_tdisp": 0.017764421179890633,
+     "student_acc": 0.17536666666666667
+    },
+    {
+     "s.family": "shape",
+     "s.condition": "gaussian",
+     "coverage_tdisp": 0.017486233574648697,
+     "student_acc": 0.17323333333333335
+    },
+    {
+     "s.family": "shape",
+     "s.condition": "laplace",
+     "coverage_tdisp": 0.013706065248697996,
+     "student_acc": 0.09800000000000002
+    },
+    {
+     "s.family": "shape",
+     "s.condition": "rademacher",
+     "coverage_tdisp": 0.017053977586328983,
+     "student_acc": 0.1769666666666667
+    },
+    {
+     "s.family": "shape",
+     "s.condition": "sparse",
+     "coverage_tdisp": 0.017861411906778812,
+     "student_acc": 0.1736333333333333
+    },
+    {
+     "s.family": "shape",
+     "s.condition": "student_t3",
+     "coverage_tdisp": 0.017724206671118736,
+     "student_acc": 0.17103333333333334
+    },
+    {
+     "s.family": "shape",
+     "s.condition": "uniform",
+     "coverage_tdisp": 0.017817149870097637,
+     "student_acc": 0.17253333333333334
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha-0.5",
+     "coverage_tdisp": 0.017909292752544086,
+     "student_acc": 0.16749999999999998
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha-1",
+     "coverage_tdisp": 0.019040745683014393,
+     "student_acc": 0.16633333333333333
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha-2",
+     "coverage_tdisp": 0.02105213546504577,
+     "student_acc": 0.1404
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha0",
+     "coverage_tdisp": 0.017486381344497204,
+     "student_acc": 0.17326666666666668
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha0.5",
+     "coverage_tdisp": 0.018048353493213654,
+     "student_acc": 0.19363333333333332
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha1",
+     "coverage_tdisp": 0.019327812517682712,
+     "student_acc": 0.20536666666666667
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha1.5",
+     "coverage_tdisp": 0.020887731884916622,
+     "student_acc": 0.17246666666666666
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha2",
+     "coverage_tdisp": 0.021846497431397438,
+     "student_acc": 0.16056666666666666
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha3",
+     "coverage_tdisp": 0.020811565841237705,
+     "student_acc": 0.10160000000000001
+    }
+   ]
+  },
+  "madl_mse": {
+   "rho_madl_families": -0.23592151907043185,
+   "rho_with_perlin": -0.11763552230676914,
+   "lofo_min": -0.6916161110956015,
+   "per_family": {
+    "dc": -0.6123724356957945,
+    "mixture": 0.7071067811865475,
+    "perlin": 1.0,
+    "rank": 0.48571428571428577,
+    "shape": -0.08571428571428573,
+    "spectral": 0.6666666666666667
+   },
+   "rows": [
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.0",
+     "coverage_tdisp": 0.01988084428012371,
+     "student_acc": 0.09546666666666666
+    },
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.3",
+     "coverage_tdisp": 0.014807261216143766,
+     "student_acc": 0.09800000000000002
+    },
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.5",
+     "coverage_tdisp": 0.010814307567973932,
+     "student_acc": 0.09800000000000002
+    },
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.7",
+     "coverage_tdisp": 0.007386456321304043,
+     "student_acc": 0.09800000000000002
+    },
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.8",
+     "coverage_tdisp": 0.006011500624784579,
+     "student_acc": 0.09800000000000002
+    },
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.9",
+     "coverage_tdisp": 0.004760083451401442,
+     "student_acc": 0.09800000000000002
+    },
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.95",
+     "coverage_tdisp": 0.00416432866283382,
+     "student_acc": 0.09800000000000002
+    },
+    {
+     "s.family": "mixture",
+     "s.condition": "p0.1",
+     "coverage_tdisp": 0.019109454316397507,
+     "student_acc": 0.09900000000000002
+    },
+    {
+     "s.family": "mixture",
+     "s.condition": "p0.3",
+     "coverage_tdisp": 0.013799848966300488,
+     "student_acc": 0.09800000000000002
+    },
+    {
+     "s.family": "mixture",
+     "s.condition": "p0.5",
+     "coverage_tdisp": 0.0098056779243052,
+     "student_acc": 0.09800000000000002
+    },
+    {
+     "s.family": "mixture",
+     "s.condition": "p0.7",
+     "coverage_tdisp": 0.007181304584567745,
+     "student_acc": 0.09800000000000002
+    },
+    {
+     "s.family": "mixture",
+     "s.condition": "p0.9",
+     "coverage_tdisp": 0.005376171689325322,
+     "student_acc": 0.09800000000000002
+    },
+    {
+     "s.family": "perlin",
+     "s.condition": "res2",
+     "coverage_tdisp": 0.02639365258316199,
+     "student_acc": 0.09800000000000002
+    },
+    {
+     "s.family": "perlin",
+     "s.condition": "res4",
+     "coverage_tdisp": 0.033443515499432884,
+     "student_acc": 0.09900000000000002
+    },
+    {
+     "s.family": "perlin",
+     "s.condition": "res8",
+     "coverage_tdisp": 0.024273866166671116,
+     "student_acc": 0.08436666666666666
+    },
+    {
+     "s.family": "rank",
+     "s.condition": "rank1",
+     "coverage_tdisp": 0.019919941822687786,
+     "student_acc": 0.09493333333333333
+    },
+    {
+     "s.family": "rank",
+     "s.condition": "rank16",
+     "coverage_tdisp": 0.019949696958065033,
+     "student_acc": 0.09466666666666668
+    },
+    {
+     "s.family": "rank",
+     "s.condition": "rank2",
+     "coverage_tdisp": 0.020046728973587353,
+     "student_acc": 0.09613333333333333
+    },
+    {
+     "s.family": "rank",
+     "s.condition": "rank28",
+     "coverage_tdisp": 0.019583077480395634,
+     "student_acc": 0.0944
+    },
+    {
+     "s.family": "rank",
+     "s.condition": "rank4",
+     "coverage_tdisp": 0.019757186993956566,
+     "student_acc": 0.0951
+    },
+    {
+     "s.family": "rank",
+     "s.condition": "rank8",
+     "coverage_tdisp": 0.01989777199923992,
+     "student_acc": 0.0939
+    },
+    {
+     "s.family": "shape",
+     "s.condition": "gaussian",
+     "coverage_tdisp": 0.019738761708140373,
+     "student_acc": 0.0939
+    },
+    {
+     "s.family": "shape",
+     "s.condition": "laplace",
+     "coverage_tdisp": 0.018137850798666477,
+     "student_acc": 0.09800000000000002
+    },
+    {
+     "s.family": "shape",
+     "s.condition": "rademacher",
+     "coverage_tdisp": 0.019467857976754505,
+     "student_acc": 0.0938
+    },
+    {
+     "s.family": "shape",
+     "s.condition": "sparse",
+     "coverage_tdisp": 0.019666613079607487,
+     "student_acc": 0.09333333333333334
+    },
+    {
+     "s.family": "shape",
+     "s.condition": "student_t3",
+     "coverage_tdisp": 0.019892585463821888,
+     "student_acc": 0.09386666666666667
+    },
+    {
+     "s.family": "shape",
+     "s.condition": "uniform",
+     "coverage_tdisp": 0.019799109548330307,
+     "student_acc": 0.09546666666666666
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha-0.5",
+     "coverage_tdisp": 0.018526530203719933,
+     "student_acc": 0.09250000000000001
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha-1",
+     "coverage_tdisp": 0.017756777505079906,
+     "student_acc": 0.0929
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha-2",
+     "coverage_tdisp": 0.01706684846431017,
+     "student_acc": 0.0939
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha0",
+     "coverage_tdisp": 0.01973884490629037,
+     "student_acc": 0.0941
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha0.5",
+     "coverage_tdisp": 0.021541663135091465,
+     "student_acc": 0.09770000000000001
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha1",
+     "coverage_tdisp": 0.02391654998064041,
+     "student_acc": 0.0843
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha1.5",
+     "coverage_tdisp": 0.026444387932618458,
+     "student_acc": 0.09883333333333333
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha2",
+     "coverage_tdisp": 0.028347893928488094,
+     "student_acc": 0.10073333333333334
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha3",
+     "coverage_tdisp": 0.0282407912115256,
+     "student_acc": 0.09800000000000002
+    }
+   ]
+  },
+  "ours": {
+   "rho_madl_families": 0.7767187863936926,
+   "rho_with_perlin": 0.5934321899935383,
+   "lofo_min": 0.6216447346796226,
+   "per_family": {
+    "dc": 0.8829187134416479,
+    "mixture": 0.9999999999999999,
+    "perlin": -0.5,
+    "rank": -0.14285714285714288,
+    "shape": -0.4285714285714286,
+    "spectral": 0.48333333333333334
+   },
+   "rows": [
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.0",
+     "coverage_tdisp": 0.031352113311489425,
+     "student_acc": 0.2539666666666667
+    },
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.3",
+     "coverage_tdisp": 0.02401915503044923,
+     "student_acc": 0.16276666666666667
+    },
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.5",
+     "coverage_tdisp": 0.01634162322928508,
+     "student_acc": 0.1404
+    },
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.7",
+     "coverage_tdisp": 0.010675206935654083,
+     "student_acc": 0.11183333333333334
+    },
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.8",
+     "coverage_tdisp": 0.008581179504593214,
+     "student_acc": 0.09606666666666668
+    },
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.9",
+     "coverage_tdisp": 0.006827622962494691,
+     "student_acc": 0.09800000000000002
+    },
+    {
+     "s.family": "dc",
+     "s.condition": "beta0.95",
+     "coverage_tdisp": 0.006167402587986241,
+     "student_acc": 0.09800000000000002
+    },
+    {
+     "s.family": "mixture",
+     "s.condition": "p0.1",
+     "coverage_tdisp": 0.03053351181248824,
+     "student_acc": 0.23863333333333334
+    },
+    {
+     "s.family": "mixture",
+     "s.condition": "p0.3",
+     "coverage_tdisp": 0.024933394665519398,
+     "student_acc": 0.22406666666666664
+    },
+    {
+     "s.family": "mixture",
+     "s.condition": "p0.5",
+     "coverage_tdisp": 0.017632215283811092,
+     "student_acc": 0.19820000000000002
+    },
+    {
+     "s.family": "mixture",
+     "s.condition": "p0.7",
+     "coverage_tdisp": 0.012058886078496775,
+     "student_acc": 0.13416666666666666
+    },
+    {
+     "s.family": "mixture",
+     "s.condition": "p0.9",
+     "coverage_tdisp": 0.008192801382392645,
+     "student_acc": 0.09800000000000002
+    },
+    {
+     "s.family": "perlin",
+     "s.condition": "res2",
+     "coverage_tdisp": 0.043639495968818665,
+     "student_acc": 0.08806666666666667
+    },
+    {
+     "s.family": "perlin",
+     "s.condition": "res4",
+     "coverage_tdisp": 0.04986091827352842,
+     "student_acc": 0.16716666666666669
+    },
+    {
+     "s.family": "perlin",
+     "s.condition": "res8",
+     "coverage_tdisp": 0.03758279730876287,
+     "student_acc": 0.2931333333333333
+    },
+    {
+     "s.family": "rank",
+     "s.condition": "rank1",
+     "coverage_tdisp": 0.03134717481831709,
+     "student_acc": 0.24876666666666666
+    },
+    {
+     "s.family": "rank",
+     "s.condition": "rank16",
+     "coverage_tdisp": 0.03107972877720992,
+     "student_acc": 0.24506666666666668
+    },
+    {
+     "s.family": "rank",
+     "s.condition": "rank2",
+     "coverage_tdisp": 0.031346977377931275,
+     "student_acc": 0.24616666666666667
+    },
+    {
+     "s.family": "rank",
+     "s.condition": "rank28",
+     "coverage_tdisp": 0.03127054125070572,
+     "student_acc": 0.24956666666666663
+    },
+    {
+     "s.family": "rank",
+     "s.condition": "rank4",
+     "coverage_tdisp": 0.03103747156759103,
+     "student_acc": 0.25466666666666665
+    },
+    {
+     "s.family": "rank",
+     "s.condition": "rank8",
+     "coverage_tdisp": 0.03119854877392451,
+     "student_acc": 0.24693333333333334
+    },
+    {
+     "s.family": "shape",
+     "s.condition": "gaussian",
+     "coverage_tdisp": 0.031306846688191094,
+     "student_acc": 0.24839999999999998
+    },
+    {
+     "s.family": "shape",
+     "s.condition": "laplace",
+     "coverage_tdisp": 0.03126796521246433,
+     "student_acc": 0.09800000000000002
+    },
+    {
+     "s.family": "shape",
+     "s.condition": "rademacher",
+     "coverage_tdisp": 0.03105310412744681,
+     "student_acc": 0.25006666666666666
+    },
+    {
+     "s.family": "shape",
+     "s.condition": "sparse",
+     "coverage_tdisp": 0.031150665134191513,
+     "student_acc": 0.24689999999999998
+    },
+    {
+     "s.family": "shape",
+     "s.condition": "student_t3",
+     "coverage_tdisp": 0.031090162694454193,
+     "student_acc": 0.2495666666666667
+    },
+    {
+     "s.family": "shape",
+     "s.condition": "uniform",
+     "coverage_tdisp": 0.031244687115152676,
+     "student_acc": 0.2507333333333333
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha-0.5",
+     "coverage_tdisp": 0.029437304163972538,
+     "student_acc": 0.23666666666666666
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha-1",
+     "coverage_tdisp": 0.02823006361722946,
+     "student_acc": 0.21636666666666668
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha-2",
+     "coverage_tdisp": 0.027138357361157734,
+     "student_acc": 0.1531
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha0",
+     "coverage_tdisp": 0.03130687649051348,
+     "student_acc": 0.24813333333333332
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha0.5",
+     "coverage_tdisp": 0.03412510082125664,
+     "student_acc": 0.31070000000000003
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha1",
+     "coverage_tdisp": 0.037922230859597526,
+     "student_acc": 0.3738666666666666
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha1.5",
+     "coverage_tdisp": 0.042107359816630684,
+     "student_acc": 0.41736666666666666
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha2",
+     "coverage_tdisp": 0.045411103715499244,
+     "student_acc": 0.37083333333333335
+    },
+    {
+     "s.family": "spectral",
+     "s.condition": "alpha3",
+     "coverage_tdisp": 0.04604752610127131,
+     "student_acc": 0.20983333333333332
+    }
+   ]
+  }
+ },
  "step2": {
   "coverage_tdisp": {
    "Head + body mismatches (E2+E4, m = 10)": {

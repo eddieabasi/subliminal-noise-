@@ -26,6 +26,16 @@ def _adam(model: SplitHeadNet, lr: float) -> torch.optim.Adam:
     return torch.optim.Adam([p for p in model.parameters() if p.requires_grad], lr=lr)
 
 
+def _optimizer(model: SplitHeadNet, kind: str, lr: float) -> torch.optim.Optimizer:
+    """"adam" (the paper's) or plain "sgd" (no momentum), whose step follows the raw gradient
+    that coverage measures."""
+    if kind == "adam":
+        return _adam(model, lr)
+    if kind == "sgd":
+        return torch.optim.SGD([p for p in model.parameters() if p.requires_grad], lr=lr)
+    raise ValueError(f"unknown optimizer {kind!r}")
+
+
 def train_teacher(model: SplitHeadNet, x: torch.Tensor, y: torch.Tensor, *, seed: int,
                   epochs: int = 5, batch: int = 1024, lr: float = 1e-3) -> None:
     """Only the class logits enter the loss, so the aux head receives no gradient."""
@@ -45,9 +55,9 @@ def train_teacher(model: SplitHeadNet, x: torch.Tensor, y: torch.Tensor, *, seed
 
 def distill_student(student: SplitHeadNet, teacher: SplitHeadNet, noise_fn: NoiseFn, *, seed: int,
                     epochs: int = 5, steps: int = 60, batch: int = 1000, lr: float = 1e-3,
-                    loss: str = "mse") -> None:
+                    loss: str = "mse", opt: str = "adam") -> None:
     """Match the teacher's aux logits on fresh noise batches; class head gets no gradient."""
-    opt = _adam(student, lr)
+    optim = _optimizer(student, opt, lr)
     gen = torch.Generator().manual_seed(seed)
     teacher.eval()
     student.train()
@@ -58,9 +68,9 @@ def distill_student(student: SplitHeadNet, teacher: SplitHeadNet, noise_fn: Nois
                 _, target = teacher(xb)
             _, pred = student(xb)
             value = channel_loss(pred, target, loss)
-            opt.zero_grad(set_to_none=True)
+            optim.zero_grad(set_to_none=True)
             value.backward()
-            opt.step()
+            optim.step()
 
 
 @torch.no_grad()
